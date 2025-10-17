@@ -1,0 +1,8 @@
+streamlit
+pandas
+numpy
+nptdms
+plotly
+xlsxwriter
+kaleido
+# For Streamlit Cloud deployment, ensure 'chromium-browser' is installed as a system dependency for kaleido.
