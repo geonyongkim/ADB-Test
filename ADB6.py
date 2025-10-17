@@ -306,7 +306,7 @@ def generate_report(df, course, scenario, fig_path=None, fig_curve=None, fig_pit
     if scenario == 'Oncoming':
         mid_gain_cols = [f'Middle Gain {i}' for i in [4, 5]]
     elif scenario == 'Preceding':
-        mid_gain_cols = [f'Middle Gain {i}' for i in range(6, 7, 8, 9, 10)]
+        mid_gain_cols = [f'Middle Gain {i}' for i in range(6, 11)]
     else:
         mid_gain_cols = []
 
@@ -459,10 +459,26 @@ def generate_report(df, course, scenario, fig_path=None, fig_curve=None, fig_pit
 
         # --- Place Graphs ---
         graph_start_row = explanation_start_row + 4 # Adjust graph start row
+        if fig_path:
+            report_sheet.write(f'A{graph_start_row}', 'Graph 1: Driving Path', subtitle_format)
+            img_path_data = io.BytesIO()
+            fig_path.write_image(img_path_data, format='png', width=720, height=405)
+            report_sheet.insert_image(f'B{graph_start_row + 1}', 'path_graph.png', {'image_data': img_path_data})
 
-
-
+        if fig_curve:
+            curve_graph_start_row = graph_start_row + 23
+            report_sheet.write(f'A{curve_graph_start_row}', 'Graph 2: Illuminance vs. Distance', subtitle_format)
+            img_curve_data = io.BytesIO()
+            fig_curve.write_image(img_curve_data, format='png', width=720, height=405)
+            report_sheet.insert_image(f'B{curve_graph_start_row + 1}', 'curve_graph.png', {'image_data': img_curve_data})
         
+        if fig_pitch:
+            pitch_graph_start_row = graph_start_row + 46
+            report_sheet.write(f'A{pitch_graph_start_row}', 'Graph 3: Pitch vs. Distance', subtitle_format)
+            img_pitch_data = io.BytesIO()
+            fig_pitch.write_image(img_pitch_data, format='png', width=720, height=405)
+            report_sheet.insert_image(f'B{pitch_graph_start_row + 1}', 'pitch_graph.png', {'image_data': img_pitch_data})
+
         # --- Sheet 2: Raw Data with Highlighting ---
         raw_data_sheet = workbook.add_worksheet('LAW DATA')
         raw_data_sheet.set_column('A:Z', 15)
@@ -905,7 +921,7 @@ def main():
                 else:
                     st.error(f"입력한 경로 '{save_path}'를 찾을 수 없거나 폴더가 아닙니다.")
 
-            st.markdown("---")
+            st.markdown("--- ")
             st.write("개별 파일 다운로드:")
             for file_identifier, course, scenario, report_bytes in st.session_state.report_downloads:
                 file_name = f"ADB_Report_{file_identifier}_{course}_{scenario}_{pd.Timestamp.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
