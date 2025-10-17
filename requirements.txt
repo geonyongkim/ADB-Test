@@ -5,3 +5,4 @@ nptdms
 plotly
 xlsxwriter
 kaleido==0.1.0
+# For Streamlit Cloud deployment, ensure 'chromium-browser' is installed as a system dependency for kaleido.
