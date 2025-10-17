@@ -306,7 +306,7 @@ def generate_report(df, course, scenario, fig_path=None, fig_curve=None, fig_pit
     if scenario == 'Oncoming':
         mid_gain_cols = [f'Middle Gain {i}' for i in [4, 5]]
     elif scenario == 'Preceding':
-        mid_gain_cols = [f'Middle Gain {i}' for i in [6, 7, 8, 9, 10]]
+        mid_gain_cols = [f'Middle Gain {i}' for i in range(6, 7, 8, 9, 10)]
     else:
         mid_gain_cols = []
 
