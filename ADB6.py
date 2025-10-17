@@ -463,8 +463,6 @@ def generate_report(df, course, scenario, fig_path=None, fig_curve=None, fig_pit
 
 
         
-
-
         # --- Sheet 2: Raw Data with Highlighting ---
         raw_data_sheet = workbook.add_worksheet('LAW DATA')
         raw_data_sheet.set_column('A:Z', 15)
