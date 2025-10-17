@@ -1,0 +1,6 @@
+streamlit
+pandas
+numpy
+nptdms
+plotly
+xlsxwriter
