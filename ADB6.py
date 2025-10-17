@@ -274,7 +274,7 @@ def get_baseline(course, scenario, distance_axis):
                 
     return limit
 
-def generate_report(df, course, scenario, fig_path=None, fig_curve=None, fig_pitch=None, csv_filename=None, tdms_filename=None, df_pitch_exceeded=None):
+def generate_report(df, course, scenario, fig_path=None, fig_curve=None, fig_pitch=None, csv_filename=None, tdms_filename=None, df_pitch_exceeded=None, pitch_stats=None):
     """분석 결과를 'report test.xlsx' 양식에 맞게 Excel 보고서로 생성하고, NG 행을 강조 표시합니다."""
     if df is None or df.empty:
         st.warning("보고서를 생성할 데이터가 없습니다.")
@@ -401,6 +401,17 @@ def generate_report(df, course, scenario, fig_path=None, fig_curve=None, fig_pit
         report_sheet.write('E4', '', editable_format)
         report_sheet.write('E5', '', editable_format)
         report_sheet.write('E6', '', editable_format)
+
+        # --- Pitch Statistics ---
+        if pitch_stats:
+            pitch_info_start_row = report_sheet.dim_row + 2
+            report_sheet.write(f'A{pitch_info_start_row}', 'Pitch Statistics', subtitle_format)
+            report_sheet.write(f'A{pitch_info_start_row + 1}', 'Avg Pitch (deg):', info_header_format)
+            report_sheet.write(f'B{pitch_info_start_row + 1}', f"{pitch_stats['avg']:.3f}")
+            report_sheet.write(f'A{pitch_info_start_row + 2}', 'Max Pitch (deg):', info_header_format)
+            report_sheet.write(f'B{pitch_info_start_row + 2}', f"{pitch_stats['max']:.3f}")
+            report_sheet.write(f'A{pitch_info_start_row + 3}', 'Min Pitch (deg):', info_header_format)
+            report_sheet.write(f'B{pitch_info_start_row + 3}', f"{pitch_stats['min']:.3f}")
 
         # --- Overall Result Summary ---
         summary_start_row = 9
@@ -531,7 +542,7 @@ def plot_distance_illuminance_curve(df, course, scenario, file_name, fig=None, x
     if fig is None:
         fig = go.Figure()
         # Add layout elements only for the first plot
-        fig.update_layout(title=f"거리-조도 곡선 ({scenario} - {course})", xaxis_title="거리 (m)", yaxis_title="조도 (lx)", legend_title="파일 - 채널")
+        fig.update_layout(title=f"거리-조도 곡선 ({scenario} - {course})", xaxis_title="거리 (m)", yaxis_title="조도 (lx)", legend_title="파일 - 채널", font_family="Noto Sans CJK KR")
         fig.update_xaxes(range=[0, xaxis_max])
         fig.update_yaxes(type="linear", autorange=True)
 
@@ -576,6 +587,7 @@ def plot_pitch_curve(df, file_name, course, scenario, fig=None, xaxis_max=None, 
     if fig is None:
         fig = go.Figure()
         fig.update_layout(
+            font_family="Noto Sans CJK KR",
             title="거리-Pitch 변화 (유효구간 통계 기반 참조선)",
             xaxis_title="거리 (m)",
             yaxis_title="Pitch (deg)",
@@ -826,7 +838,7 @@ def main():
                     fig_path_single.update_traces(line=dict(color='lightgrey'), name='전체 경로', showlegend=True)
                     if df_final_for_report is not None and not df_final_for_report.empty:
                         fig_path_single.add_trace(go.Scatter(x=df_final_for_report['PosLocalX'], y=df_final_for_report['PosLocalY'], mode='markers', name='분석 구간', marker=dict(color='red', size=3)))
-                    fig_path_single.update_layout(xaxis_title="PosLocalX (m)", yaxis_title="PosLocalY (m)")
+                    fig_path_single.update_layout(xaxis_title="PosLocalX (m)", yaxis_title="PosLocalY (m)", font_family="Noto Sans CJK KR")
                     fig_path_single.update_yaxes(scaleanchor="x", scaleratio=1)
 
                     eval_ranges = get_evaluation_ranges(course, scenario)
@@ -847,7 +859,7 @@ def main():
                         fig_pitch = plot_pitch_curve(df_approaching, file_identifier, course, scenario, fig=fig_pitch, xaxis_max=xaxis_max, color=color, pitch_stats=pitch_stats)
 
                     if df_final_for_report is not None and not df_final_for_report.empty:
-                        report_bytes, df_summary = generate_report(df_final_for_report, course, scenario, fig_path=fig_path_single, fig_curve=fig_curve_single, fig_pitch=fig_pitch_single, csv_filename=csv_filename, tdms_filename=tdms_filename, df_pitch_exceeded=df_pitch_exceeded)
+                        report_bytes, df_summary = generate_report(df_final_for_report, course, scenario, fig_path=fig_path_single, fig_curve=fig_curve_single, fig_pitch=fig_pitch_single, csv_filename=csv_filename, tdms_filename=tdms_filename, df_pitch_exceeded=df_pitch_exceeded, pitch_stats=pitch_stats)
                         if df_summary is not None and not df_summary.empty: all_summaries.append((file_identifier, df_summary))
                         if report_bytes: report_downloads.append((file_identifier, course, scenario, report_bytes))
                     else:
@@ -882,7 +894,8 @@ def main():
             st.markdown("""
             - **초과율 (%)**: 전체 평가 구간 거리 중, 법규 조도 기준을 초과한 누적 거리의 비율입니다.
             - **최대지점 초과율 (%)**: 법규 기준을 가장 크게 위반한 지점에서, 기준값 대비 초과된 조도의 비율입니다. (`(측정값 - 기준값) / 기준값 * 100`)
-            """)
+            """
+            )
 
         for file_identifier, df_summary in st.session_state.all_summaries:
             st.markdown(f"#### {file_identifier}")
