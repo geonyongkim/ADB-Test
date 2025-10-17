@@ -402,19 +402,21 @@ def generate_report(df, course, scenario, fig_path=None, fig_curve=None, fig_pit
         report_sheet.write('E5', '', editable_format)
         report_sheet.write('E6', '', editable_format)
 
+        current_row = 9 # Starting row for overall summary and pitch stats
+
         # --- Pitch Statistics ---
         if pitch_stats:
-            pitch_info_start_row = report_sheet.dim_row + 2
-            report_sheet.write(f'A{pitch_info_start_row}', 'Pitch Statistics', subtitle_format)
-            report_sheet.write(f'A{pitch_info_start_row + 1}', 'Avg Pitch (deg):', info_header_format)
-            report_sheet.write(f'B{pitch_info_start_row + 1}', f"{pitch_stats['avg']:.3f}")
-            report_sheet.write(f'A{pitch_info_start_row + 2}', 'Max Pitch (deg):', info_header_format)
-            report_sheet.write(f'B{pitch_info_start_row + 2}', f"{pitch_stats['max']:.3f}")
-            report_sheet.write(f'A{pitch_info_start_row + 3}', 'Min Pitch (deg):', info_header_format)
-            report_sheet.write(f'B{pitch_info_start_row + 3}', f"{pitch_stats['min']:.3f}")
+            report_sheet.write(f'A{current_row}', 'Pitch Statistics', subtitle_format)
+            report_sheet.write(f'A{current_row + 1}', 'Avg Pitch (deg):', info_header_format)
+            report_sheet.write(f'B{current_row + 1}', f"{pitch_stats['avg']:.3f}")
+            report_sheet.write(f'A{current_row + 2}', 'Max Pitch (deg):', info_header_format)
+            report_sheet.write(f'B{current_row + 2}', f"{pitch_stats['max']:.3f}")
+            report_sheet.write(f'A{current_row + 3}', 'Min Pitch (deg):', info_header_format)
+            report_sheet.write(f'B{current_row + 3}', f"{pitch_stats['min']:.3f}")
+            current_row += 5 # Adjust current_row after writing pitch stats
 
         # --- Overall Result Summary ---
-        summary_start_row = 9
+        summary_start_row = current_row
         final_judgment = "OK" if "NG" not in df_report['Overall (OK/NG)'].unique() else "NG"
         report_sheet.write(f'A{summary_start_row}', 'Final Result:', subtitle_format)
         report_sheet.merge_range(f'B{summary_start_row}:C{summary_start_row}', final_judgment, ok_format if final_judgment == "OK" else ng_format)
@@ -507,7 +509,7 @@ def generate_report(df, course, scenario, fig_path=None, fig_curve=None, fig_pit
                 elif isinstance(cell_value, (int, float)):
                     raw_data_sheet.write_number(row_num + 1, col_num, cell_value, row_format)
                 else:
-                    raw_data_sheet.write(row_num + 1, col_num, cell_value, row_format)
+                    report_sheet.write(row_num + 1, col_num, cell_value, row_format)
 
         # --- Sheet 3: Pitch Exceedance Data ---
         if df_pitch_exceeded is not None and not df_pitch_exceeded.empty:
@@ -542,7 +544,7 @@ def plot_distance_illuminance_curve(df, course, scenario, file_name, fig=None, x
     if fig is None:
         fig = go.Figure()
         # Add layout elements only for the first plot
-        fig.update_layout(title=f"거리-조도 곡선 ({scenario} - {course})", xaxis_title="거리 (m)", yaxis_title="조도 (lx)", legend_title="파일 - 채널", font_family="Noto Sans CJK KR")
+        fig.update_layout(title=f"Distance-Illuminance Curve ({scenario} - {course})", xaxis_title="Distance (m)", yaxis_title="Illuminance (lx)", legend_title="File - Channel")
         fig.update_xaxes(range=[0, xaxis_max])
         fig.update_yaxes(type="linear", autorange=True)
 
@@ -587,9 +589,8 @@ def plot_pitch_curve(df, file_name, course, scenario, fig=None, xaxis_max=None, 
     if fig is None:
         fig = go.Figure()
         fig.update_layout(
-            font_family="Noto Sans CJK KR",
-            title="거리-Pitch 변화 (유효구간 통계 기반 참조선)",
-            xaxis_title="거리 (m)",
+            title="Distance-Pitch Change (Based on Valid Section Statistics)",
+            xaxis_title="Distance (m)",
             yaxis_title="Pitch (deg)",
             showlegend=True,
             legend_title="File"
